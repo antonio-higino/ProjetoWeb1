@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PokéTeam Builder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+    }
+    button.secondary {
+      background: #eee;
+      color: black;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .pokemon {
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .recommendations {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PokéTeam Builder</h1>
+
+    <div class="card">
+      <h2>Selecionar Pokémon</h2>
+      <div class="row">
+        <input id="pokemonInput" placeholder="Digite o nome do Pokémon" />
+        <button onclick="addPokemon()">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Seu Time</h2>
+      <div id="team" class="grid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Recomendações</h2>
+      <div id="recommendations" class="recommendations"></div>
+    </div>
+
+    <button onclick="generateTeam()">Gerar Melhor Time</button>
+  </div>
+
+  <script>
+    const team = [];
+    const recommendations = ["Garchomp", "Rotom-Wash", "Ferrothorn"];
+
+    function addPokemon() {
+      const input = document.getElementById("pokemonInput");
+      const name = input.value.trim();
+
+      if (name && team.length < 6) {
+        team.push(name);
+        input.value = "";
+        renderTeam();
+      }
+    }
+
+    function renderTeam() {
+      const container = document.getElementById("team");
+      container.innerHTML = "";
+
+      team.forEach(pokemon => {
+        const div = document.createElement("div");
+        div.className = "pokemon";
+        div.innerText = pokemon;
+        container.appendChild(div);
+      });
+    }
+
+    function renderRecommendations() {
+      const container = document.getElementById("recommendations");
+      container.innerHTML = "";
+
+      recommendations.forEach(pokemon => {
+        const btn = document.createElement("button");
+        btn.className = "secondary";
+        btn.innerText = pokemon;
+        btn.onclick = () => {
+          if (team.length < 6) {
+            team.push(pokemon);
+            renderTeam();
+          }
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function generateTeam() {
+      alert("Função de geração completa ainda não implementada");
+    }
+
+    renderRecommendations();
+  </script>
+</body>
+</html>
