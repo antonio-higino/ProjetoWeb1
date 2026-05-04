@@ -89,5 +89,6 @@ Permitir que qualquer usuário monte um time eficiente de forma rápida, receben
 * HTML
 * CSS
 * Node JS
+* [Figma](https://www.figma.com/design/hziICZC8QbzllHwdjouzRl/Team-Builder-de-Pok%C3%A9mon?node-id=0-1&t=HLpsoDmdKiolIJV0-1)
 * [PokéAPI](https://pokeapi.co/)  
 * [Repositório Pokémon Assets](https://github.com/HybridShivam/Pokemon)
