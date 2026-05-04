@@ -1,0 +1,75 @@
+body {
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+    background: #121212;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+h2 {
+    text-align: center;
+}
+
+.card {
+    background: #303030;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+}
+
+button.secondary {
+    background: #eee;
+    color: black;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.pokemon {
+    background: #e9ecef;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.recommendations {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
