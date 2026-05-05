@@ -9,7 +9,7 @@ Projeto da disciplina Web 1 - Site de recomendação de Pokémon
 
 ## **2\. Problema**
 
-Jogadores de Pokémon frequentemente enfrentam dificuldades ao montar um time variados e equilibrados de 6 Pokémon, considerando fatores como tipos, fraquezas, cobertura de golpes e sinergia geral. A construção manual exige conhecimento avançado e pode ser demorada.
+Existem mais de 1000 Pokémon, cada um com seus tipos, e cada tipo tem resistências e fraquezas. Jogadores de Pokémon podem querer montar times variados e balanceados, mas não saber como, considerando corretamente fatores como tipos, fraquezas, cobertura de golpes e sinergia geral. A construção manual exige conhecimento avançado sobre as regras e pode ser demorada.
 
 ## **3\. Objetivo**
 
