@@ -118,3 +118,71 @@ button.secondary {
     box-shadow:
         0 2px 6px rgba(0,0,0,.1);
 }
+
+.recommended-card {
+    cursor: pointer;
+}
+
+.recommended-card {
+
+    position: relative;
+}
+
+.recommended-card:hover {
+
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 6px 16px
+        rgba(
+            0,
+            0,
+            0,
+            0.2
+        );
+}
+
+.click-hint {
+
+    position: absolute;
+
+    top: 8px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    padding: 4px 8px;
+
+    border-radius: 4px;
+
+    background: rgba(
+        0,
+        0,
+        0,
+        0.8
+    );
+
+    color: white;
+
+    font-size: 0.75rem;
+
+    white-space: nowrap;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transition:
+        opacity 0.2s ease;
+
+    pointer-events: none;
+}
+
+.recommended-card:hover .click-hint {
+
+    opacity: 1;
+
+    visibility: visible;
+}

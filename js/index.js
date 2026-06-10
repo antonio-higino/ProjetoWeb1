@@ -5,11 +5,69 @@
 const CACHE_KEY = "pokemonCache";
 const TEAM_KEY = "pokemonTeam";
 const TYPE_CACHE_KEY = "pokemonTypeCache";
+const SPECIES_CACHE_KEY = "pokemonSpeciesCache";
 
-const typeCache =
-    JSON.parse(
-        localStorage.getItem(TYPE_CACHE_KEY)
-    ) || {};
+const speciesCache = {};
+
+const EXCLUDED_FORMS = [
+    "-mega",
+    "-mega-x",
+    "-mega-y",
+    "-gmax",
+    "-totem"
+];
+
+function compressPokemonData(
+    pokemon
+) {
+
+    return {
+
+        id: pokemon.id,
+
+        name: pokemon.name,
+
+        species: pokemon.species,
+
+        stats: pokemon.stats,
+
+        types: pokemon.types,
+
+        sprites: {
+
+            front_default:
+                pokemon.sprites
+                    .front_default
+        }
+    };
+}
+
+let typeCache = {};
+
+try {
+
+    const storedTypes =
+        localStorage.getItem(
+            TYPE_CACHE_KEY
+        );
+
+    typeCache =
+        storedTypes
+            ? JSON.parse(storedTypes)
+            : {};
+
+} catch (error) {
+
+    console.warn(
+        "Cache de tipos inválido. Limpando..."
+    );
+
+    localStorage.removeItem(
+        TYPE_CACHE_KEY
+    );
+
+    typeCache = {};
+}
 
 const expectedTypes = [
     "normal",
@@ -32,18 +90,36 @@ const expectedTypes = [
     "fairy"
 ];
 
-// Carrega cache salvo
-const persistedCache =
-    JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
-
-// Converte objeto para Map
-const pokemonCache = new Map(
-    Object.entries(persistedCache)
-);
+const pokemonCache =
+    new Map();
 
 // Carrega time salvo
-const team =
-    JSON.parse(localStorage.getItem(TEAM_KEY)) || [];
+let team = [];
+
+try {
+
+    const storedTeam =
+        localStorage.getItem(
+            TEAM_KEY
+        );
+
+    team =
+        storedTeam
+            ? JSON.parse(storedTeam)
+            : [];
+
+} catch (error) {
+
+    console.warn(
+        "Time salvo inválido. Limpando..."
+    );
+
+    localStorage.removeItem(
+        TEAM_KEY
+    );
+
+    team = [];
+}
 
 // =========================
 // Elementos HTML
@@ -69,6 +145,8 @@ document.addEventListener(
 
         renderOverview();
 
+        renderRecommendations();
+
         addPokemonButton.addEventListener(
             "click",
             addPokemonToTeam
@@ -79,22 +157,23 @@ document.addEventListener(
 // =========================
 // Funções de Persistência
 // =========================
-
-function saveCache() {
-    const cacheObject =
-        Object.fromEntries(pokemonCache);
-
-    localStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify(cacheObject)
-    );
-}
-
 function saveTeam() {
-    localStorage.setItem(
-        TEAM_KEY,
-        JSON.stringify(team)
-    );
+
+    try {
+
+        localStorage.setItem(
+            TEAM_KEY,
+            JSON.stringify(
+                team
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Limite do localStorage atingido."
+        );
+    }
 }
 
 async function initializeTypeCache() {
@@ -200,10 +279,10 @@ async function addPokemonToTeam() {
             // Salva no cache
             pokemonCache.set(
                 pokemonName,
-                pokemonData
+                compressPokemonData(
+                    pokemonData
+                )
             );
-
-            saveCache();
         }
 
         // Evita duplicados
@@ -219,13 +298,24 @@ async function addPokemonToTeam() {
         }
 
         // Adiciona ao time
-        team.push(pokemonData);
+        const compactPokemon =
+            compressPokemonData(
+                pokemonData
+            );
+
+        team.push(
+            compactPokemon
+        );
 
         saveTeam();
 
         renderTeam();
 
         renderOverview();
+
+        clearRecommendedPokemon();
+
+        renderRecommendations();
 
         pokemonInput.value = "";
 
@@ -314,6 +404,8 @@ function removePokemon(index) {
     renderTeam();
 
     renderOverview();
+
+    renderRecommendations();
 }
 
 function getPokemonTypeMultipliers(pokemon) {
@@ -446,6 +538,463 @@ function getTeamWeaknesses() {
         .sort(
             (a, b) => (b[1].veryWeak * 4 + b[1].weak * 2) - (a[1].veryWeak * 4 + a[1].weak * 2)
         );
+}
+
+function scoreDefensiveType(
+    candidateType,
+    weaknesses
+) {
+
+    let score = 0;
+
+    const candidateData =
+        typeCache[candidateType];
+
+    if (!candidateData) {
+        return 0;
+    }
+
+    weaknesses.forEach(
+        ([weakType]) => {
+
+            if (
+                candidateData.damage_relations
+                    .no_damage_from
+                    .some(
+                        t =>
+                        t.name === weakType
+                    )
+            ) {
+                score += 4;
+            }
+
+            if (
+                candidateData.damage_relations
+                    .half_damage_from
+                    .some(
+                        t =>
+                        t.name === weakType
+                    )
+            ) {
+                score += 2;
+            }
+
+            if (
+                candidateData.damage_relations
+                    .double_damage_from
+                    .some(
+                        t =>
+                        t.name === weakType
+                    )
+            ) {
+                score -= 2;
+            }
+        }
+    );
+
+    return score;
+}
+
+function getRecommendedTypes() {
+
+    const weaknesses =
+        getTeamWeaknesses();
+
+    return Object.keys(typeCache)
+
+        .map(type => ({
+
+            type,
+
+            score:
+                scoreDefensiveType(
+                    type,
+                    weaknesses
+                )
+        }))
+
+        .sort(
+            (a, b) =>
+                b.score - a.score
+        )
+
+        .slice(0, 5);
+}
+
+function renderRecommendations() {
+
+    const container =
+        document.getElementById(
+            "recommendations"
+        );
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const recommendations =
+        getRecommendedTypes();
+
+    recommendations.forEach(
+        recommendation => {
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+            button.className =
+                "recommendation-button";
+
+            button.textContent =
+                `${recommendation.type} (${recommendation.score})`;
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    showPokemonForType(
+                        recommendation.type
+                    );
+                }
+            );
+
+            container.appendChild(
+                button
+            );
+        }
+    );
+}
+
+function calculateBST(
+    pokemon
+) {
+
+    return pokemon.stats.reduce(
+        (total, stat) =>
+            total +
+            stat.base_stat,
+        0
+    );
+}
+
+async function getSpeciesData(
+    speciesUrl
+) {
+
+    if (
+        speciesCache[speciesUrl]
+    ) {
+
+        return speciesCache[
+            speciesUrl
+        ];
+    }
+
+    const response =
+        await fetch(
+            speciesUrl
+        );
+
+    if (!response.ok) {
+
+        return {
+
+            is_legendary: false,
+
+            is_mythical: false
+        };
+    }
+
+    const data =
+        await response.json();
+
+    speciesCache[speciesUrl] = {
+
+        is_legendary:
+            data.is_legendary,
+
+        is_mythical:
+            data.is_mythical
+    };
+
+    return speciesCache[
+        speciesUrl
+    ];
+}
+
+function clearRecommendedPokemon() {
+
+    const container =
+        document.getElementById(
+            "recommendedPokemon"
+        );
+
+    container.innerHTML = "";
+}
+
+async function showPokemonForType(
+    typeName
+) {
+
+    const container =
+        document.getElementById(
+            "recommendedPokemon"
+        );
+
+    container.innerHTML =
+        "<p>Carregando...</p>";
+
+    try {
+
+        const typeData =
+            typeCache[typeName];
+
+        const candidates = [];
+
+        const pokemonList =
+            typeData.pokemon
+                .slice(0, 150);
+
+        for (
+            const entry
+            of pokemonList
+        ) {
+
+            const name =
+                entry.pokemon.name;
+
+            if (
+                EXCLUDED_FORMS.some(
+                    suffix =>
+                        name.includes(suffix)
+                )
+            ) {
+                continue;
+            }
+
+            let pokemon;
+
+            if (
+                pokemonCache.has(name)
+            ) {
+
+                pokemon =
+                    pokemonCache.get(
+                        name
+                    );
+
+            } else {
+
+                const response =
+                    await fetch(
+                        `https://pokeapi.co/api/v2/pokemon/${name}`
+                    );
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Erro ${response.status} ao buscar ${name}`
+                    );
+                }
+
+                const contentType =
+                    response.headers.get(
+                        "content-type"
+                    );
+
+                if (
+                    !contentType ||
+                    !contentType.includes(
+                        "application/json"
+                    )
+                ) {
+
+                    const text =
+                        await response.text();
+
+                    console.error(
+                        "Resposta não é JSON:"
+                    );
+
+                    console.error(text);
+
+                    throw new Error(
+                        "A API retornou conteúdo inválido."
+                    );
+                }
+
+                pokemon =
+                    await response.json();
+
+                pokemonCache.set(
+                    name,
+                    compressPokemonData(
+                        pokemon
+                    )
+                );
+            }
+
+            const species =
+                await getSpeciesData(
+                    pokemon.species.url
+                );
+
+            if (
+                species.is_baby ||
+                species.is_legendary ||
+                species.is_mythical
+            ) {
+                continue;
+            }
+
+            candidates.push({
+
+                pokemon,
+
+                bst:
+                    calculateBST(
+                        pokemon
+                    )
+            });
+        }
+
+        candidates.sort(
+            (a, b) =>
+                b.bst - a.bst
+        );
+
+        renderRecommendedPokemon(
+            candidates.slice(0, 10)
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+            "<p>Erro ao carregar recomendações.</p>";
+    }
+}
+
+async function addRecommendedPokemon(
+    pokemon
+) {
+
+    if (
+        team.length >= 6
+    ) {
+
+        alert(
+            "Seu time já possui 6 Pokémon."
+        );
+
+        return;
+    }
+
+    const alreadyExists =
+        team.some(
+            teamPokemon =>
+                teamPokemon.id === pokemon.id
+        );
+
+    if (
+        alreadyExists
+    ) {
+
+        alert(
+            "Esse Pokémon já está no time."
+        );
+
+        return;
+    }
+
+    team.push(
+        pokemon
+    );
+
+    saveTeam();
+
+    renderTeam();
+
+    renderOverview();
+
+    clearRecommendedPokemon();
+
+    renderRecommendations();
+}
+
+function renderRecommendedPokemon(
+    candidates
+) {
+
+    const container =
+        document.getElementById(
+            "recommendedPokemon"
+        );
+
+    container.innerHTML = "";
+
+    candidates.forEach(
+        candidate => {
+
+            const pokemon =
+                candidate.pokemon;
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "pokemon-card recommended-card";
+
+            card.innerHTML = `
+                <div class="pokemon-image">
+                    <img
+                        src="${pokemon.sprites.front_default}"
+                        alt="${pokemon.name}"
+                    >
+                </div>
+
+                <div class="pokemon-info">
+
+                    <h3>
+                        ${pokemon.name.toUpperCase()}
+                    </h3>
+
+                    <p>
+                        BST: ${candidate.bst}
+                    </p>
+
+                    <p class="click-hint">
+                        Clique para adicionar ao time
+                    </p>
+
+                    <p>
+                        ${
+                            pokemon.types
+                                .map(
+                                    t =>
+                                    t.type.name
+                                )
+                                .join(", ")
+                        }
+                    </p>
+
+                </div>
+            `;
+
+            card.addEventListener(
+                "click",
+                () => addRecommendedPokemon(
+                    pokemon
+                )
+            );
+
+            container.appendChild(card);
+        }
+    );
 }
 
 function renderOverview() {
