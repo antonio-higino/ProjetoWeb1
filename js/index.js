@@ -377,15 +377,22 @@ function renderTeam() {
                 <p>
                     Tipo(s): ${types}
                 </p>
-            </div>
 
-            <button
-                class="remove-button"
-                onclick="removePokemon(${index})"
-            >
-                Remover
-            </button>
+                <p class="remove-hint">
+                    Clique para remover
+                </p>
+            </div>
         `;
+
+        card.classList.add(
+            "team-card"
+        );
+
+        card.addEventListener(
+            "click",
+            () =>
+                removePokemon(index)
+        );
 
         teamContainer.appendChild(card);
     });
@@ -865,7 +872,7 @@ async function showPokemonForType(
         );
 
         renderRecommendedPokemon(
-            candidates.slice(0, 10)
+            candidates.slice(0, 12)
         );
 
     } catch (error) {
@@ -1017,26 +1024,28 @@ function renderOverview() {
 
                 const card = document.createElement("div");
 
-                card.className = "type-overview-card";
+                card.className = "overview-card";
 
                 card.innerHTML = `
                     <h3>${type.toUpperCase()}</h3>
 
-                    <p>Score: ${score}</p>
+                    <h4>Score: ${score}</h4>
 
-                    <hr>
+                    <div class="overview-tooltip">
 
-                    <p>Imunes: ${coverage.immune}</p>
+                        <p>Imunes: ${coverage.immune}</p>
 
-                    <p>Muito Resistentes: ${coverage.veryResistant}</p>
+                        <p>Muito Resistentes: ${coverage.veryResistant}</p>
 
-                    <p>Resistentes: ${coverage.resistant}</p>
+                        <p>Resistentes: ${coverage.resistant}</p>
 
-                    <p>Neutros: ${coverage.neutral}</p>
+                        <p>Neutros: ${coverage.neutral}</p>
 
-                    <p>Fracos: ${coverage.weak}</p>
+                        <p>Fracos: ${coverage.weak}</p>
 
-                    <p>Muito Fracos: ${coverage.veryWeak}</p>
+                        <p>Muito Fracos: ${coverage.veryWeak}</p>
+
+                    </div>
                 `;
 
                 overview.appendChild(card);
