@@ -55,38 +55,6 @@ function saveSpeciesCache() {
     }
 }
 
-function shuffleArray(
-    array
-) {
-
-    const shuffled =
-        [...array];
-
-    for (
-        let i =
-            shuffled.length - 1;
-        i > 0;
-        i--
-    ) {
-
-        const j =
-            Math.floor(
-                Math.random() *
-                (i + 1)
-            );
-
-        [
-            shuffled[i],
-            shuffled[j]
-        ] = [
-            shuffled[j],
-            shuffled[i]
-        ];
-    }
-
-    return shuffled;
-}
-
 function compressPokemonData(
     pokemon
 ) {
@@ -347,22 +315,90 @@ async function addPokemonToTeam() {
                 `Cache MISS: ${pokemonName}`
             );
 
-            const response = await fetch(
-                `https://pokeapi.co/api/v2/pokemon/${pokemonName}`
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    "Pokémon não encontrado."
+            const speciesResponse =
+                await fetch(
+                    `https://pokeapi.co/api/v2/pokemon-species/${pokemonName}`
                 );
-            }
 
-            pokemonData =
-                await response.json();
+            if (speciesResponse.ok) {
+
+                const speciesData =
+                    await speciesResponse.json();
+
+                let selectedPokemonUrl =
+                    null;
+
+                const exactVariety =
+                    speciesData.varieties.find(
+                        variety =>
+                            variety.pokemon.name ===
+                            pokemonName
+                    );
+
+                if (exactVariety) {
+
+                    selectedPokemonUrl =
+                        exactVariety.pokemon.url;
+
+                } else {
+
+                    const defaultVariety =
+                        speciesData.varieties.find(
+                            variety =>
+                                variety.is_default
+                        );
+
+                    if (!defaultVariety) {
+
+                        throw new Error(
+                            "Forma padrão não encontrada."
+                        );
+                    }
+
+                    selectedPokemonUrl =
+                        defaultVariety.pokemon.url;
+                }
+
+                const response =
+                    await fetch(
+                        selectedPokemonUrl
+                    );
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Erro ao buscar Pokémon."
+                    );
+                }
+
+                pokemonData =
+                    await response.json();
+
+            } else {
+
+                console.log(
+                    "pokemon-species falhou, tentando endpoint pokemon..."
+                );
+
+                const pokemonResponse =
+                    await fetch(
+                        `https://pokeapi.co/api/v2/pokemon/${pokemonName}`
+                    );
+
+                if (!pokemonResponse.ok) {
+
+                    throw new Error(
+                        "Pokémon não encontrado."
+                    );
+                }
+
+                pokemonData =
+                    await pokemonResponse.json();
+            }
 
             // Salva no cache
             pokemonCache.set(
-                pokemonName,
+                pokemonData.name,
                 compressPokemonData(
                     pokemonData
                 )
@@ -455,7 +491,7 @@ function renderTeam() {
                 </h3>
 
                 <p>
-                    Tipo(s): ${types}
+                    ${types}
                 </p>
 
                 <p class="remove-hint">
@@ -608,6 +644,173 @@ function calculateCoverageScore(coverage) {
         coverage.weak * 1 -
         coverage.veryWeak * 1.5
     );
+}
+
+function createVirtualPokemon(
+    primaryType,
+    secondaryType
+) {
+
+    const types = [
+
+        {
+            type: {
+                name: primaryType
+            }
+        }
+    ];
+
+    if (
+        secondaryType &&
+        secondaryType !== primaryType
+    ) {
+
+        types.push({
+
+            type: {
+                name: secondaryType
+            }
+        });
+    }
+
+    return {
+
+        id: -1,
+
+        name: "virtual",
+
+        types
+    };
+}
+
+function calculateTeamScore(
+    teamToEvaluate
+) {
+
+    const currentMatrix =
+        calculateCoverageMatrix(
+            team
+        );
+
+    const simulatedMatrix =
+        calculateCoverageMatrix(
+            teamToEvaluate
+        );
+
+    let improvement = 0;
+
+    Object.keys(
+        currentMatrix
+    ).forEach(type => {
+
+        const currentScore =
+            currentMatrix[type].score;
+
+        if (
+            currentScore >= 0
+        ) {
+            return;
+        }
+
+        const simulatedScore =
+            simulatedMatrix[type].score;
+
+        const delta =
+            simulatedScore -
+            currentScore;
+
+        if (delta > 0) {
+
+            improvement += delta;
+
+        } else {
+
+            improvement +=
+                delta * 2;
+        }
+    });
+
+    return improvement;
+}
+
+function evaluateTypeCombinations(
+    primaryType
+) {
+
+    const combinations = [];
+
+    Object.keys(typeCache)
+        .forEach(
+            secondaryType => {
+
+                if (
+                    secondaryType ===
+                    primaryType
+                ) {
+                    return;
+                }
+
+                const virtualPokemon =
+                    createVirtualPokemon(
+                        primaryType,
+                        secondaryType
+                    );
+
+                const simulatedTeam = [
+
+                    ...team,
+
+                    virtualPokemon
+                ];
+
+                const score =
+                    calculateTeamScore(
+                        simulatedTeam
+                    );
+
+                combinations.push({
+
+                    primaryType,
+
+                    secondaryType,
+
+                    score
+                });
+            }
+        );
+
+    combinations.sort(
+        (a, b) =>
+            b.score - a.score
+    );
+
+    return combinations;
+}
+
+function buildCombinationRanking(
+    primaryType
+) {
+
+    const ranking =
+        evaluateTypeCombinations(
+            primaryType
+        );
+
+    const map = {};
+
+    ranking.forEach(
+        (
+            combination,
+            index
+        ) => {
+
+            map[
+                combination.secondaryType
+            ] = index;
+        }
+    );
+
+    return map;
 }
 
 function getTeamWeaknesses() {
@@ -844,6 +1047,11 @@ async function showPokemonForType(
         const typeData =
             typeCache[typeName];
 
+        const combinationRanking =
+            buildCombinationRanking(
+                typeName
+            );
+
         const pokemonList =
             typeData.pokemon
                 .slice(0, 150);
@@ -912,6 +1120,13 @@ async function showPokemonForType(
                         return null;
                     }
 
+                    const secondaryType =
+                        pokemon.types.find(
+                            t =>
+                                t.type.name !==
+                                typeName
+                        )?.type?.name;
+
                     return {
 
                         pokemon,
@@ -920,7 +1135,17 @@ async function showPokemonForType(
                             pokemon.bst ??
                             calculateBST(
                                 pokemon
-                            )
+                            ),
+
+                        combinationRank:
+
+                            secondaryType
+                                ? (
+                                    combinationRanking[
+                                        secondaryType
+                                    ] ?? 999
+                                )
+                                : 999
                     };
                 }
             );
@@ -947,14 +1172,29 @@ async function showPokemonForType(
                     candidates.length / 2
                 )
             );
+        
+        topHalf.sort(
+            (a, b) => {
+
+                if (
+                    a.combinationRank !==
+                    b.combinationRank
+                ) {
+
+                    return (
+                        a.combinationRank -
+                        b.combinationRank
+                    );
+                }
+
+                return (
+                    b.bst - a.bst
+                );
+            }
+        );
 
         const recommendations =
-            shuffleArray(
-                topHalf
-            ).slice(
-                0,
-                12
-            );
+            topHalf.slice(0,18);
 
         renderRecommendedPokemon(
             recommendations
@@ -1056,7 +1296,7 @@ function renderRecommendedPokemon(
                     </h3>
 
                     <p class="click-hint">
-                        Clique para adicionar ao time
+                        Clique para adicionar
                     </p>
 
                     <p>
