@@ -953,24 +953,24 @@ function getRecommendedTypes() {
 
 function renderRecommendations() {
 
-    if (
-        team.length >= 6
-    ) {
+    const container =
+        document.getElementById(
+            "recommendations"
+        );
 
-        const recommendedTypes =
-            document.getElementById(
-                "recommendations"
-            );
+    if (
+        team.length < 1
+    ) {
 
         const recommendedPokemon =
             document.getElementById(
                 "recommendedPokemon"
             );
 
-        recommendedTypes.innerHTML = `
-            <p class="team-full-message">
-                Time completo (${team.length}/6).
-                Remova algum Pokémon para receber novas recomendações.
+        container.innerHTML = `
+            <p class="team-empty-message">
+                Time vazio (${team.length}/6).
+                Adicione algum Pokémon para receber recomendações.
             </p>
         `;
 
@@ -979,10 +979,26 @@ function renderRecommendations() {
         return;
     }
 
-    const container =
-        document.getElementById(
-            "recommendations"
-        );
+    if (
+        team.length >= 6
+    ) {
+
+        const recommendedPokemon =
+            document.getElementById(
+                "recommendedPokemon"
+            );
+
+        container.innerHTML = `
+            <p class="team-full-message">
+                Time completo (${team.length}/6).
+                Remova algum Pokémon para receber recomendações.
+            </p>
+        `;
+
+        recommendedPokemon.innerHTML = "";
+
+        return;
+    }
 
     if (!container) return;
 
