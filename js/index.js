@@ -576,7 +576,9 @@ function getPokemonTypeMultipliers(pokemon) {
     return multipliers;
 }
 
-function calculateCoverageMatrix() {
+function calculateCoverageMatrix(
+    teamToEvaluate = team
+) {
 
     const matrix = {};
 
@@ -593,7 +595,7 @@ function calculateCoverageMatrix() {
             };
         });
 
-    team.forEach(pokemon => {
+    teamToEvaluate.forEach(pokemon => {
 
         const multipliers = getPokemonTypeMultipliers(pokemon);
 
@@ -646,6 +648,35 @@ function calculateCoverageScore(coverage) {
     );
 }
 
+function calculateWeaknessPenalty(
+    matrix
+) {
+
+    let penalty = 0;
+
+    Object.values(matrix).forEach(
+        coverage => {
+
+            const score =
+                calculateCoverageScore(
+                    coverage
+                );
+
+            if (
+                score < 0
+            ) {
+
+                penalty +=
+                    Math.abs(
+                        score
+                    ) ** 2;
+            }
+        }
+    );
+
+    return penalty;
+}
+
 function createVirtualPokemon(
     primaryType,
     secondaryType
@@ -687,50 +718,14 @@ function calculateTeamScore(
     teamToEvaluate
 ) {
 
-    const currentMatrix =
-        calculateCoverageMatrix(
-            team
-        );
-
-    const simulatedMatrix =
+    const matrix =
         calculateCoverageMatrix(
             teamToEvaluate
         );
 
-    let improvement = 0;
-
-    Object.keys(
-        currentMatrix
-    ).forEach(type => {
-
-        const currentScore =
-            currentMatrix[type].score;
-
-        if (
-            currentScore >= 0
-        ) {
-            return;
-        }
-
-        const simulatedScore =
-            simulatedMatrix[type].score;
-
-        const delta =
-            simulatedScore -
-            currentScore;
-
-        if (delta > 0) {
-
-            improvement += delta;
-
-        } else {
-
-            improvement +=
-                delta * 2;
-        }
-    });
-
-    return improvement;
+    return -calculateWeaknessPenalty(
+        matrix
+    );
 }
 
 function evaluateTypeCombinations(
