@@ -309,3 +309,14 @@ button.secondary {
 
     visibility: visible;
 }
+
+.team-full-message {
+
+    text-align: center;
+
+    padding: 1rem;
+
+    font-weight: bold;
+
+    color: #e01d1dfb;
+}

@@ -206,6 +206,21 @@ document.addEventListener(
     }
 );
 
+pokemonInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            addPokemonToTeam();
+        }
+    }
+);
+
 // =========================
 // Funções de Persistência
 // =========================
@@ -679,7 +694,7 @@ function calculateWeaknessPenalty(
 
 function createVirtualPokemon(
     primaryType,
-    secondaryType
+    secondaryType = null
 ) {
 
     const types = [
@@ -692,8 +707,7 @@ function createVirtualPokemon(
     ];
 
     if (
-        secondaryType &&
-        secondaryType !== primaryType
+        secondaryType
     ) {
 
         types.push({
@@ -733,6 +747,32 @@ function evaluateTypeCombinations(
 ) {
 
     const combinations = [];
+
+    const monoTypePokemon =
+        createVirtualPokemon(
+            primaryType
+        );
+
+    const monoTypeTeam = [
+
+        ...team,
+
+        monoTypePokemon
+    ];
+
+    const monoTypeScore =
+        calculateTeamScore(
+            monoTypeTeam
+        );
+
+    combinations.push({
+
+        primaryType,
+
+        secondaryType: null,
+
+        score: monoTypeScore
+    });
 
     Object.keys(typeCache)
         .forEach(
@@ -799,9 +839,14 @@ function buildCombinationRanking(
             index
         ) => {
 
-            map[
+            const key =
                 combination.secondaryType
-            ] = index;
+
+                    ? `${combination.primaryType}/${combination.secondaryType}`
+
+                    : combination.primaryType;
+
+            map[key] = index;
         }
     );
 
@@ -907,6 +952,32 @@ function getRecommendedTypes() {
 }
 
 function renderRecommendations() {
+
+    if (
+        team.length >= 6
+    ) {
+
+        const recommendedTypes =
+            document.getElementById(
+                "recommendations"
+            );
+
+        const recommendedPokemon =
+            document.getElementById(
+                "recommendedPokemon"
+            );
+
+        recommendedTypes.innerHTML = `
+            <p class="team-full-message">
+                Time completo (${team.length}/6).
+                Remova algum Pokémon para receber novas recomendações.
+            </p>
+        `;
+
+        recommendedPokemon.innerHTML = "";
+
+        return;
+    }
 
     const container =
         document.getElementById(
@@ -1115,12 +1186,27 @@ async function showPokemonForType(
                         return null;
                     }
 
-                    const secondaryType =
-                        pokemon.types.find(
-                            t =>
-                                t.type.name !==
-                                typeName
-                        )?.type?.name;
+                    let rankingKey;
+
+                    if (
+                        pokemon.types.length === 1
+                    ) {
+
+                        rankingKey =
+                            typeName;
+
+                    } else {
+
+                        const secondaryType =
+                            pokemon.types.find(
+                                t =>
+                                    t.type.name !==
+                                    typeName
+                            )?.type?.name;
+
+                        rankingKey =
+                            `${typeName}/${secondaryType}`;
+                    }
 
                     return {
 
@@ -1134,13 +1220,9 @@ async function showPokemonForType(
 
                         combinationRank:
 
-                            secondaryType
-                                ? (
-                                    combinationRanking[
-                                        secondaryType
-                                    ] ?? 999
-                                )
-                                : 999
+                            combinationRanking[
+                                rankingKey
+                            ] ?? 999
                     };
                 }
             );
