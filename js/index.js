@@ -15,6 +15,28 @@ const EXCLUDED_FORMS = [
     "-totem"
 ];
 
+const TYPE_COLORS = {
+
+    bug: "#A8B820",
+    dark: "#6F5747",
+    dragon: "#7036FC",
+    electric: "#F9D130",
+    fairy: "#FD67D7",
+    fighting: "#C02F27",
+    fire: "#F17F2E",
+    flying: "#A990F1",
+    ghost: "#715799",
+    grass: "#78C850",
+    ground: "#E1C067",
+    ice: "#95D7D8",
+    normal: "#A9A878",
+    poison: "#A03FA1",
+    psychic: "#F95788",
+    rock: "#B89F38",
+    steel: "#B8B8D0",
+    water: "#6890F0"
+};
+
 let speciesCache = {};
 
 try {
@@ -487,10 +509,26 @@ function renderTeam() {
             pokemon.sprites?.front_default ||
             "";
 
-        const types =
+        const typeBadges =
             pokemon.types
-                .map(type => type.type.name)
-                .join(", ");
+                .map(type => {
+
+                    const typeName =
+                        type.type.name;
+
+                    return `
+                        <span
+                            class="pokemon-type-badge"
+                            style="
+                                background-color:
+                                    ${TYPE_COLORS[typeName]};
+                            "
+                        >
+                            ${typeName}
+                        </span>
+                    `;
+                })
+                .join("");
 
         card.innerHTML = `
             <div class="pokemon-image">
@@ -502,12 +540,12 @@ function renderTeam() {
 
             <div class="pokemon-info">
                 <h3>
-                    ${pokemon.name.toUpperCase()}
+                    ${pokemon.name}
                 </h3>
 
-                <p>
-                    ${types}
-                </p>
+                <div class="pokemon-types">
+                    ${typeBadges}
+                </div>
 
                 <p class="remove-hint">
                     Clique para remover
@@ -1371,6 +1409,27 @@ function renderRecommendedPokemon(
                     "div"
                 );
 
+            const typeBadges =
+                pokemon.types
+                    .map(type => {
+
+                        const typeName =
+                            type.type.name;
+
+                        return `
+                            <span
+                                class="pokemon-type-badge"
+                                style="
+                                    background-color:
+                                        ${TYPE_COLORS[typeName]};
+                                "
+                            >
+                                ${typeName}
+                            </span>
+                        `;
+                    })
+                    .join("");
+
             card.className =
                 "pokemon-card recommended-card";
 
@@ -1385,22 +1444,15 @@ function renderRecommendedPokemon(
                 <div class="pokemon-info">
 
                     <h3>
-                        ${pokemon.name.toUpperCase()}
+                        ${pokemon.name}
                     </h3>
+
+                    <div class="pokemon-types">
+                        ${typeBadges}
+                    </div>
 
                     <p class="click-hint">
                         Clique para adicionar
-                    </p>
-
-                    <p>
-                        ${
-                            pokemon.types
-                                .map(
-                                    t =>
-                                    t.type.name
-                                )
-                                .join(", ")
-                        }
                     </p>
 
                 </div>
@@ -1440,10 +1492,21 @@ function renderOverview() {
 
                 card.className = "overview-card";
 
-                card.innerHTML = `
-                    <h3>${type.toUpperCase()}</h3>
+                card.style.background =
+                    TYPE_COLORS[type];
 
-                    <h4>Score: ${score}</h4>
+                card.style.color =
+                    "white";
+
+                card.innerHTML = `
+
+                    <div class="overview-type">
+                        ${type}
+                    </div>
+
+                    <div class="overview-score">
+                        ${score}
+                    </div>
 
                     <div class="overview-tooltip">
 

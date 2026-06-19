@@ -85,10 +85,24 @@ button.secondary {
 .pokemon-card {
     background: white;
     color: black;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    
+    text-transform: capitalize;
+}
+
+.pokemon-card:hover {
+
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.15);
 }
 
 .pokemon-image img {
@@ -111,14 +125,33 @@ button.secondary {
 }
 
 .overview-card {
-    background: white;
+
     color: black;
-    border-radius: 12px;
-    padding: 12px;
+
+    border:
+    2px solid rgba(
+        255,
+        255,
+        255,
+        0.25
+    );
+
+    border-radius: 16px;
+
+    padding: 16px;
+
     text-align: center;
+
     box-shadow:
-        0 2px 6px rgba(0,0,0,.1);
+        0 4px 12px rgba(0,0,0,0.2);
+
     position: relative;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    
+    text-transform: capitalize;
 }
 
 .overview-tooltip {
@@ -169,6 +202,24 @@ button.secondary {
     opacity: 1;
 
     visibility: visible;
+}
+
+.overview-type {
+
+    font-size: 1rem;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    margin-bottom: 8px;
+}
+
+.overview-score {
+
+    font-size: 2rem;
+
+    font-weight: 800;
 }
 
 .recommended-card {
@@ -330,4 +381,32 @@ button.secondary {
     font-weight: bold;
 
     color: #10c245fb;
+}
+
+.pokemon-types {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    margin-top: 8px;
+
+    flex-wrap: wrap;
+}
+
+.pokemon-type-badge {
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    color: white;
+
+    font-size: 0.8rem;
+
+    font-weight: 600;
+
+    text-transform: capitalize;
 }
