@@ -13,8 +13,20 @@
     <div class="card">
       <h2>Selecionar Pokémon</h2>
       <div class="row">
-        <input type="text" id="pokemonInput" placeholder="Digite o nome do Pokémon" />
-        <button id="addPokemonButton">Adicionar ao time</button>
+          <div class="pokemon-input-container">
+              <input
+                  type="text"
+                  id="pokemonInput"
+                  placeholder="Digite o nome do Pokémon"
+              />
+              <div
+                  id="pokemonSuggestions"
+                  class="pokemon-suggestions"
+              ></div>
+          </div>
+          <button id="addPokemonButton">
+              Adicionar ao time
+          </button>
       </div>
     </div>
 
@@ -35,7 +47,7 @@
 
     <div class="card">
       <h2>Equilíbrio de Tipos no Time</h2>
-      <div id="overview" class="grid"></div>
+      <div id="overview"></div>
     </div>
   </div>
 
