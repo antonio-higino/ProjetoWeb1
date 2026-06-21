@@ -1,3 +1,5 @@
+const API_URL = "http://localhost:3000";
+
 const CACHE_KEY = "pokemonCache";
 const TEAM_KEY = "pokemonTeam";
 const TYPE_CACHE_KEY = "pokemonTypeCache";
@@ -202,6 +204,18 @@ pokemonInput.addEventListener(
 const addPokemonButton =
     document.getElementById("addPokemonButton");
 
+const usernameInput =
+    document.getElementById("usernameInput");
+
+const passwordInput =
+    document.getElementById("passwordInput");
+
+const loginButton =
+    document.getElementById("loginButton");
+
+const registerButton =
+    document.getElementById("registerButton");
+
 document.addEventListener(
     "DOMContentLoaded",
     async () => {
@@ -237,25 +251,6 @@ pokemonInput.addEventListener(
         }
     }
 );
-
-function saveTeam() {
-
-    try {
-
-        localStorage.setItem(
-            TEAM_KEY,
-            JSON.stringify(
-                team
-            )
-        );
-
-    } catch (error) {
-
-        console.warn(
-            "Limite do localStorage atingido."
-        );
-    }
-}
 
 async function initializeTypeCache() {
 
@@ -322,6 +317,456 @@ function buildPokemonNameIndex() {
     allPokemonNames =
         Array.from(names)
             .sort();
+}
+
+function saveTeam() {
+
+    try {
+
+        localStorage.setItem(
+            TEAM_KEY,
+            JSON.stringify(
+                team
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Limite do localStorage atingido."
+        );
+    }
+}
+
+async function saveTeamOnline() {
+
+    const user =
+        JSON.parse(
+            localStorage.getItem(
+                "currentUser"
+            )
+        );
+
+    if (!user) {
+
+        alert(
+            "Faça login."
+        );
+
+        return;
+    }
+
+    const teamName =
+        prompt(
+            "Nome do time:"
+        );
+
+    if (!teamName) {
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_URL}/teams`,
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            userId:
+                                user.id,
+
+                            teamName,
+
+                            teamData:
+                                team
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                result.error
+            );
+        }
+
+        alert(
+            "Time salvo."
+        );
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+    }
+
+    await loadSavedTeams();
+}
+
+async function loadSavedTeams() {
+
+    const user =
+        JSON.parse(
+            localStorage.getItem(
+                "currentUser"
+            )
+        );
+
+    if (!user) {
+
+        return;
+    }
+
+    const response =
+        await fetch(
+
+            `${API_URL}/teams/${user.id}`
+        );
+
+    const teams =
+        await response.json();
+
+    renderSavedTeams(
+        teams
+    );
+}
+
+function renderSavedTeams(
+    teams
+) {
+
+    if (
+        !JSON.parse(
+            localStorage.getItem(
+                "currentUser"
+            )
+        )
+    ) {
+        return;
+    }
+
+    const container =
+        document.getElementById(
+            "savedTeams"
+        );
+
+    container.innerHTML =
+        "<h3>Meus Times</h3>";
+
+    teams.forEach(
+        team => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "saved-team";
+
+            div.innerHTML = `
+
+                <strong>
+                    ${team.team_name}
+                </strong>
+
+                <button
+                    onclick="
+                    loadTeam(
+                        ${team.id}
+                    )"
+                >
+                    Carregar
+                </button>
+
+                <button
+                    onclick="
+                    deleteTeam(
+                        ${team.id}
+                    )"
+                >
+                    Excluir
+                </button>
+            `;
+
+            container.appendChild(
+                div
+            );
+        }
+    );
+}
+
+async function loadTeam(
+    teamId
+) {
+
+    const response =
+        await fetch(
+
+            `${API_URL}/team/${teamId}`
+        );
+
+    const savedTeam =
+        await response.json();
+
+    team =
+        JSON.parse(
+            savedTeam.team_data
+        );
+
+    saveTeam();
+
+    renderTeam();
+
+    renderOverview();
+
+    renderRecommendations();
+
+    clearRecommendedPokemon();
+}
+
+async function deleteTeam(
+    teamId
+) {
+
+    if (
+        !confirm(
+            "Excluir time?"
+        )
+    ) {
+
+        return;
+    }
+
+    await fetch(
+
+        `${API_URL}/team/${teamId}`,
+
+        {
+            method:
+                "DELETE"
+        }
+    );
+
+    loadSavedTeams();
+}
+
+async function register() {
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_URL}/register`,
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            username:
+                                usernameInput.value,
+
+                            password:
+                                passwordInput.value
+                        })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                data.error
+            );
+        }
+
+        alert(
+            "Usuário criado com sucesso."
+        );
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+    }
+}
+
+async function login() {
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_URL}/login`,
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            username:
+                                usernameInput.value,
+
+                            password:
+                                passwordInput.value
+                        })
+                }
+            );
+
+        const user =
+            await response.json();
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                user.error
+            );
+        }
+
+        localStorage.setItem(
+
+            "currentUser",
+
+            JSON.stringify(
+                user
+            )
+        );
+
+        renderUser();
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+    }
+
+    await loadSavedTeams();
+}
+
+registerButton.addEventListener(
+    "click",
+    register
+);
+
+loginButton.addEventListener(
+    "click",
+    login
+);
+
+function renderUser() {
+
+    const user =
+        JSON.parse(
+            localStorage.getItem(
+                "currentUser"
+            )
+        );
+
+    const container =
+        document.getElementById(
+            "loggedUserSection"
+        );
+
+    if (!user) {
+
+        container.innerHTML = "";
+
+        return;
+    }
+
+    container.innerHTML = `
+
+        <p>
+            Olá,
+            <strong>
+                ${user.username}
+            </strong>
+        </p>
+
+        <button id="saveTeamButton">
+            Salvar Time
+        </button>
+
+        <button id="logoutButton">
+            Sair
+        </button>
+    `;
+
+    document
+        .getElementById(
+            "logoutButton"
+        )
+        .addEventListener(
+            "click",
+            logout
+        );
+
+    document
+        .getElementById(
+            "saveTeamButton"
+        )
+        .addEventListener(
+            "click",
+            saveTeamOnline
+        );
+}
+
+function logout() {
+
+    document.getElementById("savedTeams").innerHTML = "";
+
+    localStorage.removeItem(
+        "currentUser"
+    );
+
+    renderUser();
 }
 
 function renderSuggestions() {
@@ -1625,3 +2070,7 @@ function renderOverview() {
             }
         );
 }
+
+renderUser();
+
+loadSavedTeams();

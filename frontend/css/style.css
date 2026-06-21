@@ -560,6 +560,23 @@ input {
     align-items: center;
 }
 
+.saved-team {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 10px;
+
+    margin-bottom: 8px;
+
+    background: #303030;
+
+    border-radius: 8px;
+}
+
 .suggestion-item {
 
     cursor: pointer;

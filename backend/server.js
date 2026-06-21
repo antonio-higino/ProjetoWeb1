@@ -224,6 +224,205 @@ app.post(
     }
 );
 
+app.post(
+    "/teams",
+    (
+        req,
+        res
+    ) => {
+
+        const {
+
+            userId,
+
+            teamName,
+
+            teamData
+
+        } = req.body;
+
+        db.run(
+
+            `
+            INSERT INTO teams
+            (
+                user_id,
+                team_name,
+                team_data
+            )
+            VALUES
+            (
+                ?,
+                ?,
+                ?
+            )
+            `,
+
+            [
+
+                userId,
+
+                teamName,
+
+                JSON.stringify(
+                    teamData
+                )
+            ],
+
+            function(error) {
+
+                if (error) {
+
+                    return res
+                        .status(500)
+                        .json({
+
+                            error:
+                                "Erro ao salvar."
+                        });
+                }
+
+                res.json({
+
+                    teamId:
+                        this.lastID
+                });
+            }
+        );
+    }
+);
+
+app.get(
+    "/teams/:userId",
+    (
+        req,
+        res
+    ) => {
+
+        db.all(
+
+            `
+            SELECT
+                id,
+                team_name,
+                created_at
+            FROM teams
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            `,
+
+            [
+                req.params.userId
+            ],
+
+            (
+                error,
+                rows
+            ) => {
+
+                if (error) {
+
+                    return res
+                        .status(500)
+                        .json({
+
+                            error:
+                                "Erro ao buscar times."
+                        });
+                }
+
+                res.json(
+                    rows
+                );
+            }
+        );
+    }
+);
+
+app.get(
+    "/team/:teamId",
+    (
+        req,
+        res
+    ) => {
+
+        db.get(
+
+            `
+            SELECT *
+            FROM teams
+            WHERE id = ?
+            `,
+
+            [
+                req.params.teamId
+            ],
+
+            (
+                error,
+                row
+            ) => {
+
+                if (error) {
+
+                    return res
+                        .status(500)
+                        .json({
+
+                            error:
+                                "Erro."
+                        });
+                }
+
+                res.json(
+                    row
+                );
+            }
+        );
+    }
+);
+
+app.delete(
+    "/team/:teamId",
+    (
+        req,
+        res
+    ) => {
+
+        db.run(
+
+            `
+            DELETE FROM teams
+            WHERE id = ?
+            `,
+
+            [
+                req.params.teamId
+            ],
+
+            function(error) {
+
+                if (error) {
+
+                    return res
+                        .status(500)
+                        .json({
+
+                            error:
+                                "Erro."
+                        });
+                }
+
+                res.json({
+
+                    success:
+                        true
+                });
+            }
+        );
+    }
+);
+
 app.listen(
     3000,
     () =>
