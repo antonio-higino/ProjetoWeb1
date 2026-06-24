@@ -173,9 +173,9 @@ Instale as dependências:
 npm install
 ```
 
-### 2. Iniciar o servidor backend
+### 2. Iniciar o servidor
 
-Dentro da pasta `backend`, execute:
+Ainda dentro da pasta `backend`, execute:
 
 ```bash
 node server.js
@@ -189,19 +189,31 @@ http://localhost:3000
 
 Ao iniciar, o backend cria automaticamente as tabelas necessárias no banco SQLite, caso elas ainda não existam.
 
-### 3. Abrir o frontend
+Além disso, o próprio backend também serve os arquivos do frontend. Portanto, não é necessário abrir o arquivo `index.html` manualmente.
 
-Abra o arquivo:
+### 3. Acessar o sistema
+
+Depois de iniciar o servidor, abra no navegador:
 
 ```text
-frontend/index.html
+http://localhost:3000
 ```
 
-Recomenda-se usar a extensão **Live Server** no VS Code.
+Esse endereço carrega a interface completa do PokéTeam Builder, incluindo HTML, CSS, JavaScript e as funcionalidades conectadas ao backend.
 
 ---
 
 ## Rotas da API
+
+Além de servir o frontend em `http://localhost:3000`, o backend também disponibiliza as rotas da API usadas pelo sistema.
+
+### Página inicial do sistema
+
+```http
+GET /
+```
+
+Carrega o frontend da aplicação.
 
 ### Cadastro de Usuário
 
@@ -273,15 +285,17 @@ DELETE /team/:teamId
 
 O projeto utiliza SQLite.
 
+Ao iniciar o servidor, o backend verifica se as tabelas necessárias já existem. Caso não existam, elas são criadas automaticamente.
+
 ### Tabela `users`
 
 Armazena os usuários cadastrados.
 
 Campos principais:
 
-- `id`;
-- `username`;
-- `password`.
+* `id`;
+* `username`;
+* `password`.
 
 A senha é salva como hash, não em texto puro.
 
@@ -291,11 +305,11 @@ Armazena os times salvos pelos usuários.
 
 Campos principais:
 
-- `id`;
-- `user_id`;
-- `team_name`;
-- `team_data`;
-- `created_at`.
+* `id`;
+* `user_id`;
+* `team_name`;
+* `team_data`;
+* `created_at`.
 
 O campo `team_data` armazena o time em formato JSON.
 
@@ -344,7 +358,7 @@ O sistema considera:
 
 - As habilidades dos Pokémon não são levadas em conta, mesmo em alguns casos podendo afetar as vulnerabilidades defensivas do time;
     * Diante de como é a implementação da PokéAPI, é necessária uma catalogação manual de todas habilidades que influenciam defensivamente;
-        * Ex: a habilidade `Levitate` torna o Pokémon imune ao tipo `Ground`;
+        * Ex: A habilidade `Levitate` torna o Pokémon imune ao tipo `Ground`;
 - O sistema não leva em conta a cobertura ofensiva do time;
     * Para isso é necessário implementar a seleção de golpes por Pokémon;
 - Não existe nenhuma filtragem de Pokémon por Jogo ou Geração;

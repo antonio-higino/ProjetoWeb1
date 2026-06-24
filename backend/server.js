@@ -1,12 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const path = require("path");
 const db = require("./database");
-
 const app = express();
+const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use(
+    express.static(
+        path.join(
+            __dirname,
+            "../frontend"
+        )
+    )
+);
 
 db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -423,10 +433,32 @@ app.delete(
     }
 );
 
+app.get(
+    "/",
+    (
+        req,
+        res
+    ) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../frontend/index.html"
+            )
+        );
+    }
+);
+
 app.listen(
-    3000,
-    () =>
+    PORT,
+    () => {
+
         console.log(
             "Servidor iniciado."
-        )
+        );
+
+        console.log(
+            `Frontend disponível em: http://localhost:${PORT}`
+        );
+    }
 );

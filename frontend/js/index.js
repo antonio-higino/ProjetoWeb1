@@ -2,7 +2,7 @@
    CONSTANTES
 ================================================== */
 
-const API_URL = "http://localhost:3000";
+const API_URL = window.location.origin;
 
 const CACHE_KEY = "pokemonCache";
 const SPECIES_CACHE_KEY = "pokemonSpeciesCache";
